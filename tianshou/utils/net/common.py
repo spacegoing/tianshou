@@ -243,8 +243,11 @@ class Net(nn.Module):
         obs: Union[np.ndarray, torch.Tensor],
         state: Any = None,
         info: Dict[str, Any] = {},
+        debug=False
     ) -> Tuple[torch.Tensor, Any]:
         """Mapping: obs -> flatten (inside MLP)-> logits."""
+        if debug:
+            import pdb; pdb.set_trace()
         logits = self.model(obs)
         bsz = logits.shape[0]
         if self.use_dueling:  # Dueling DQN

@@ -120,8 +120,13 @@ class Critic(nn.Module):
         obs: Union[np.ndarray, torch.Tensor],
         act: Optional[Union[np.ndarray, torch.Tensor]] = None,
         info: Dict[str, Any] = {},
+            debug=False
     ) -> torch.Tensor:
+        if debug:
+            import pdb; pdb.set_trace()
         """Mapping: (s, a) -> logits -> Q(s, a)."""
+        # input shape: obs: [bsz, state_dim]; act: [bsz, act_dim]
+        # transformed shape: obs: [bsz, state_dim]; act: [bsz, act_dim]
         obs = torch.as_tensor(
             obs,
             device=self.device,
@@ -133,8 +138,9 @@ class Critic(nn.Module):
                 device=self.device,
                 dtype=torch.float32,
             ).flatten(1)
+            # obs: [bsz, state_dim + act_dim]
             obs = torch.cat([obs, act], dim=1)
-        logits, hidden = self.preprocess(obs)
+        logits, hidden = self.preprocess(obs, debug=debug)
         logits = self.last(logits)
         return logits
 
@@ -206,10 +212,16 @@ class ActorProb(nn.Module):
         obs: Union[np.ndarray, torch.Tensor],
         state: Any = None,
         info: Dict[str, Any] = {},
+        debug=False
     ) -> Tuple[Tuple[torch.Tensor, torch.Tensor], Any]:
         """Mapping: obs -> logits -> (mu, sigma)."""
-        logits, hidden = self.preprocess(obs, state)
+        if debug:
+            import pdb; pdb.set_trace()
+        # logits: [bsz, hidden_dim]
+        logits, hidden = self.preprocess(obs, state, debug=debug)
+        # mu: [bsz, act_dim]
         mu = self.mu(logits)
+        # sigma: [bsz, act_dim]
         if not self._unbounded:
             mu = self._max * torch.tanh(mu)
         if self._c_sigma:
