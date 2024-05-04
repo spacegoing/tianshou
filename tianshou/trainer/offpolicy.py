@@ -117,6 +117,9 @@ class OffpolicyTrainer(BaseTrainer):
     def policy_update_fn(self, data: Dict[str, Any], result: Dict[str, Any]) -> None:
         """Perform off-policy updates."""
         assert self.train_collector is not None
+        if self.train_collector.buffer.buffers[
+            0]._size <= 10000 // self.train_collector.env_num:
+            return None
         for _ in range(round(self.update_per_step * result["n/st"])):
             self.gradient_step += 1
             losses = self.policy.update(self.batch_size, self.train_collector.buffer)
